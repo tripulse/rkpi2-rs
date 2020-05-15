@@ -1,0 +1,16 @@
+[package]
+name       = "rkpi2"
+version    = "0.1.0"
+authors    = ["tripulse"]
+homepage   = "https://github.com/tripulse/rkpi2-rs"
+categories = ["multimedia", "multimedia::audio"]
+keywords   = ["audio", "rkpi", "library", "sound", "wave"]
+license    = "ISC"
+edition    = "2018"
+exclude    = ["target/**/*", "*.lock", "*.yml"]
+
+[dependencies]
+zstd = "0.5.1+zstd.1.4.4"
+
+[dev-dependencies]
+os_pipe = "0.9.1"
