@@ -1,6 +1,6 @@
 [package]
 name        = "rkpi2"
-version     = "0.1.0"
+version     = "0.1.2"
 authors     = ["tripulse"]
 description = "An implementation of the RKPI2 format."
 homepage    = "https://github.com/tripulse/rkpi2-rs"
