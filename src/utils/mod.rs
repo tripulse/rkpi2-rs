@@ -2,10 +2,7 @@ use std::convert::TryFrom;
 pub mod err;
 pub use err::RErr;
 
-/// Sampleformat to code audio data with. Variants
-/// starting with `Int` mean "signed integer" or `i`
-/// (prefix in Rust) and `Float` mean "floating point"
-/// or `f`.
+/// Sampleformat to code PCM audio data with.
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum Fmt {
   Int8    = 0, Int16   = 1,

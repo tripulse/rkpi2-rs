@@ -29,19 +29,14 @@ use zstd::{Encoder, Decoder};
 mod utils;
 pub use utils::{Fmt, Hdr, RErr};
 
-/// A defined set of samplerates allowed for the PCM
-/// data encapsulated inside RKPI2.
 const SAMPLERATES: [u32; 8] = [
     8000, 12000, 22050, 32000, 44100,
     64000, 96000, 192000 ];
 
-/// Mux RKPI2 header data into a writer so decoders can
-/// decode the PCM data.
+/// Mux RKPI2 header data into a writer with a given header
+/// and compress PCM data with Zstd if a level was specified.
 /// 
-/// # Arguments
-/// * `w` — boxed writer to write in RKPI2 header data.
-/// * `h` — header to serialise as of specification and write.
-/// * `lev` — level of Zstd compression ranged (1..+21].
+/// The level is the same as the scale of Zstd: (+1..+21].
 fn mux(w: Box<dyn Write>, h: Hdr, lev: Option<u8>)
     -> Result<Box<dyn Write>, RErr> {
     let mut w = w;
@@ -49,16 +44,16 @@ fn mux(w: Box<dyn Write>, h: Hdr, lev: Option<u8>)
     let srate_idx = match SAMPLERATES
         .iter().position(|&s| s == h.rate) {
         Some(S) => S as u8,
-        None    => { return Err(RErr::Rate) }
+        None => { return Err(RErr::Rate) }
     };
 
     let channels = match h.channels {
         (1..=8) => h.channels,
-        _       => { return Err(RErr::Channels) }
+        _ => { return Err(RErr::Channels) }
     };
 
-    let compressed = match lev {
-        Some(_) => true, None => false };
+    let compressed = match lev
+    { Some(_) => true, None => false };
 
     if let Err(_) = w.write_all(&[
         0x3d                 << 2|
@@ -69,28 +64,23 @@ fn mux(w: Box<dyn Write>, h: Hdr, lev: Option<u8>)
         channels        - 1
     ]) { return Err(RErr::IO) }
 
-    // if compression was an option wrap with the Zstd stream encoder
-    // else just return the same writer back for writing data.
     match lev {
         Some(L) => match Encoder::new(w, L as i32)
-        { Ok(C)  => Ok(Box::new(C)),
+        { Ok(C) => Ok(Box::new(C)),
           Err(_) => Err(RErr::IO) },
-        None    => Ok(w)
+        None => Ok(w)
     }
 }
 
 /// Demux RKPI2 header data from the given reader, if compression
-/// was done before it wraps reader with Zstd decompressor.
-/// 
-/// # Arguments
-/// * `r` — boxed reader to parse RKPI2 header data.
+/// was done wrap the reader with Zstd decompression adapter.
 fn demux(r: Box<dyn Read>)
     -> Result<(Box<dyn Read>, Hdr), RErr> {
     let mut r = r;
 
     let mut hdr = [0u8; 2];
     if let Err(_) = r.read(&mut hdr)
-        { return Err(RErr::IO); }
+    { return Err(RErr::IO) }
 
     if hdr[0] >> 2 != 0x3d { Err(RErr::StartCode) }
     else {
@@ -104,10 +94,9 @@ fn demux(r: Box<dyn Read>)
             channels: (hdr[1] & 3) + 1
         };
 
-        // if decompression is a requirement, wrap it up with Zstd decompressor.
         match (hdr[0] >> 1 & 1) == 1 {
-            true  => match Decoder::new(r)
-            { Ok(D)  => Ok((Box::new(D), h)),
+            true => match Decoder::new(r)
+            { Ok(D) => Ok((Box::new(D), h)),
               Err(_) => Err(RErr::IO) },
             false => Ok((r, h))
         }
