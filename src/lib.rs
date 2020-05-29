@@ -37,7 +37,7 @@ const SAMPLERATES: [u32; 8] = [
 /// and compress PCM data with Zstd if a level was specified.
 /// 
 /// The level is the same as the scale of Zstd: (+1..+21].
-fn mux(w: Box<dyn Write>, h: Hdr, lev: Option<u8>)
+pub fn mux(w: Box<dyn Write>, h: Hdr, lev: Option<u8>)
     -> Result<Box<dyn Write>, RErr> {
     let mut w = w;
 
@@ -74,7 +74,7 @@ fn mux(w: Box<dyn Write>, h: Hdr, lev: Option<u8>)
 
 /// Demux RKPI2 header data from the given reader, if compression
 /// was done wrap the reader with Zstd decompression adapter.
-fn demux(r: Box<dyn Read>)
+pub fn demux(r: Box<dyn Read>)
     -> Result<(Box<dyn Read>, Hdr), RErr> {
     let mut r = r;
 
